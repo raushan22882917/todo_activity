@@ -11,13 +11,54 @@ bcrypt = Bcrypt(app)
 
 # Database connection
 def get_db_connection():
-    conn = psycopg2.connect(
-        host="dpg-cqegi208fa8c73e6mgjg-a",
-        database="tododb_qzpy",
-        user="root",
-        password="lhjuw7w3KVTUxIYGWW7X8cKbLoAEi95u"
-    )
-    return conn
+    try:
+        conn = psycopg2.connect(
+            host="dpg-cqegi208fa8c73e6mgjg-a.oregon-postgres.render.com",
+            port="5432",
+            database="tododb_qzpy",
+            user="root",
+            password="lhjuw7w3KVTUxIYGWW7X8cKbLoAEi95u"
+        )
+        return conn
+    except Exception as e:
+        print(f"Error connecting to the database: {e}")
+        return None
+
+# Create tables if they don't exist
+def create_tables():
+    conn = get_db_connection()
+    if conn:
+        try:
+            cur = conn.cursor()
+
+            # Create users table
+            cur.execute('''
+                CREATE TABLE IF NOT EXISTS users (
+                    id SERIAL PRIMARY KEY,
+                    email VARCHAR(255) UNIQUE NOT NULL,
+                    password TEXT NOT NULL
+                )
+            ''')
+
+            # Create activities table
+            cur.execute('''
+                CREATE TABLE IF NOT EXISTS activities (
+                    id SERIAL PRIMARY KEY,
+                    user_id INTEGER REFERENCES users(id),
+                    activity TEXT NOT NULL,
+                    time TIMESTAMP NOT NULL
+                )
+            ''')
+
+            conn.commit()
+            cur.close()
+        except Exception as e:
+            print(f"Error creating tables: {e}")
+        finally:
+            conn.close()
+
+# Initialize tables
+create_tables()
 
 @app.route('/')
 def index():
@@ -32,17 +73,20 @@ def login():
         email = request.form['email']
         password = request.form['password']
         conn = get_db_connection()
-        cur = conn.cursor()
-        cur.execute('SELECT * FROM users WHERE email = %s', (email,))
-        user = cur.fetchone()
-        cur.close()
-        conn.close()
-        if user and bcrypt.check_password_hash(user[2], password):
-            session['user_id'] = user[0]
-            session['user_email'] = user[1]  # Store user email in session
-            return redirect(url_for('activity'))
+        if conn:
+            cur = conn.cursor()
+            cur.execute('SELECT * FROM users WHERE email = %s', (email,))
+            user = cur.fetchone()
+            cur.close()
+            conn.close()
+            if user and bcrypt.check_password_hash(user[2], password):
+                session['user_id'] = user[0]
+                session['user_email'] = user[1]  # Store user email in session
+                return redirect(url_for('activity'))
+            else:
+                flash('Invalid email or password')
         else:
-            flash('Invalid email or password')
+            flash('Database connection error')
     return render_template('login.html')
 
 @app.route('/signup', methods=['GET', 'POST'])
@@ -51,12 +95,15 @@ def signup():
         email = request.form['email']
         password = bcrypt.generate_password_hash(request.form['password']).decode('utf-8')
         conn = get_db_connection()
-        cur = conn.cursor()
-        cur.execute('INSERT INTO users (email, password) VALUES (%s, %s)', (email, password))
-        conn.commit()
-        cur.close()
-        conn.close()
-        return redirect(url_for('login'))
+        if conn:
+            cur = conn.cursor()
+            cur.execute('INSERT INTO users (email, password) VALUES (%s, %s)', (email, password))
+            conn.commit()
+            cur.close()
+            conn.close()
+            return redirect(url_for('login'))
+        else:
+            flash('Database connection error')
     return render_template('signup.html')
 
 @app.route('/activity', methods=['GET', 'POST'])
@@ -67,23 +114,27 @@ def activity():
     user_id = session['user_id']
     user_email = session['user_email']
     conn = get_db_connection()
-    cur = conn.cursor()
+    if conn:
+        cur = conn.cursor()
 
-    if request.method == 'POST':
-        if 'delete' in request.form:
-            activity_id = request.form['activity_id']
-            cur.execute('DELETE FROM activities WHERE id = %s AND user_id = %s', (activity_id, user_id))
-            conn.commit()
-        else:
-            activity = request.form['activity']
-            time = request.form['time']
-            cur.execute('INSERT INTO activities (user_id, activity, time) VALUES (%s, %s, %s)', (user_id, activity, time))
-            conn.commit()
+        if request.method == 'POST':
+            if 'delete' in request.form:
+                activity_id = request.form['activity_id']
+                cur.execute('DELETE FROM activities WHERE id = %s AND user_id = %s', (activity_id, user_id))
+                conn.commit()
+            else:
+                activity = request.form['activity']
+                time = request.form['time']
+                cur.execute('INSERT INTO activities (user_id, activity, time) VALUES (%s, %s, %s)', (user_id, activity, time))
+                conn.commit()
 
-    cur.execute('SELECT id, activity, time FROM activities WHERE user_id = %s', (user_id,))
-    activities = cur.fetchall()
-    cur.close()
-    conn.close()
+        cur.execute('SELECT id, activity, time FROM activities WHERE user_id = %s', (user_id,))
+        activities = cur.fetchall()
+        cur.close()
+        conn.close()
+    else:
+        flash('Database connection error')
+        activities = []
 
     return render_template('activity.html', activities=activities, user_email=user_email)
 
