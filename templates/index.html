@@ -7,6 +7,85 @@
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <style>
+        body {
+            background: url("{{ url_for('static', filename='image1.jpeg') }}") no-repeat center center fixed;
+            background-size: cover;
+            font-family: 'Arial', sans-serif;
+            color: black;
+        }
+        .navbar {
+            margin-bottom: 30px;
+        }
+        .navbar-brand {
+            font-size: 1.5rem;
+        }
+        .navbar-nav .nav-link {
+            font-size: 1.1rem;
+        }
+        .navbar-nav .nav-item .nav-link {
+            color: #f1f1f1 !important;
+        }
+        .navbar-nav .nav-item .nav-link:hover {
+            color: #ffd700 !important;
+        }
+        .jumbotron {
+            background-color: rgba(0, 123, 255, 0.7);
+            color: white;
+            padding: 2rem;
+            border-radius: 0.3rem;
+        }
+        h1 {
+            font-size: 2.5rem;
+            color: #f8f9fa;
+            margin-top: 20px;
+            text-align: center;
+        }
+        .italic-text {
+            font-style: italic;
+            color: #ffd700; 
+        }
+        .card {
+            margin-top: 20px;
+            background-color: rgba(0, 0, 0, 0.5);
+        }
+        .card img {
+            height: 200px;
+            object-fit: cover;
+        }
+        .card-body {
+            color: #f1f1f1;
+        }
+        .footer {
+            background-color: #343a40;
+            color: white;
+            padding: 10px;
+            text-align: center;
+            width: 100%;
+            margin-top: 180px;
+        }
+        .footer .social-media a {
+            color: white;
+            margin: 0 10px;
+            font-size: 1.5rem;
+        }
+        .footer .social-media a:hover {
+            color: #ffd700;
+        }
+        .calendar {
+            margin-top: 20px;
+            padding: 20px;
+            background-color: #fff;
+            color: #000;
+            border-radius: 0.3rem;
+            position: relative;
+            height: 500px; /* Adjust height as needed */
+        }
+        .clock {
+            font-size: 2rem;
+            text-align: center;
+        }
+    </style>
 </head>
 <body>
     <!-- Navbar -->
@@ -37,13 +116,70 @@
     </nav>
 
     <!-- Main content -->
-    <div class="container my-5">
-        <h1>Welcome to the Home Page</h1>
+    <div class="containers">
+        <div class="jumbotron">
+            <h1 class="display-4">Welcome to the <span class="italic-text">APNA TODO</span></h1>
+        </div>
+
+        <!-- Section with Cards -->
+        <div class="row">
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">Google Calendar</h5>
+                        <iframe src="https://calendar.google.com/calendar/embed?src=YOUR_CALENDAR_ID&ctz=YOUR_TIMEZONE" style="border: 0; width: 100%; height: 500px;" frameborder="0" scrolling="no"></iframe>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title colorful-text"><i class="fas fa-clock"></i> Current Time</h5>
+                        <div id="clock" class="clock"></div>
+                    </div>
+                </div>
+                <div class="my-5">
+                    <h2>About Us</h2>
+                    <p>Welcome to  <b>Apna Todo</b>, where we simplify task management for you! Our mission is to help you stay organized and productive with a user-friendly and intuitive to-do list application. At Apna Todo, we believe that managing your tasks should be effortless and enjoyable.</p>
+                    <p>Our platform is designed to make tracking your activities and setting reminders easy and effective. Whether you're planning your day, setting goals, or just keeping track of your to-do items, Apna Todo is here to support you. With features tailored to your needs, we're committed to helping you achieve your goals and stay on top of your tasks.</p>
+                </div>                
+            </div>
+        </div>
+
+        <!-- Additional Content -->
+        
     </div>
+
+    <!-- Footer -->
+    <div style="margin-top:100px;">
+        <footer class="footer" >
+            <p>&copy; 2024 Your Company. All Rights Reserved.</p>
+            <div class="social-media">
+                <a href="https://facebook.com" target="_blank" title="Facebook"><i class="fab fa-facebook-f"></i></a>
+                <a href="https://twitter.com" target="_blank" title="Twitter"><i class="fab fa-twitter"></i></a>
+                <a href="https://instagram.com" target="_blank" title="Instagram"><i class="fab fa-instagram"></i></a>
+                <a href="https://linkedin.com" target="_blank" title="LinkedIn"><i class="fab fa-linkedin-in"></i></a>
+            </div>
+        </footer>
+    </div>
+    
 
     <!-- Bootstrap JS and dependencies -->
     <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <script>
+        // Update Digital Clock
+        function updateClock() {
+            var now = new Date();
+            var hours = String(now.getHours()).padStart(2, '0');
+            var minutes = String(now.getMinutes()).padStart(2, '0');
+            var seconds = String(now.getSeconds()).padStart(2, '0');
+            document.getElementById('clock').textContent = hours + ':' + minutes + ':' + seconds;
+        }
+
+        setInterval(updateClock, 1000);
+        updateClock(); // Initial call to set the time immediately
+    </script>
 </body>
 </html>
