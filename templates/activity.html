@@ -75,11 +75,6 @@
         .list-group-item i {
             color: #007bff;
         }
-
-        .activities-container {
-            margin-top: 20px;
-        }
-    
         .list-group-item {
             background-color: #f8f9fa;
             border: 1px solid #dee2e6;
@@ -90,38 +85,83 @@
             justify-content: space-between;
             align-items: center;
         }
-    
         .activity-details {
             display: flex;
             flex-direction: column;
             align-items: flex-start;
         }
-    
         .activity-details i {
             margin-right: 10px;
         }
-    
         .activity-details strong {
             font-size: 1.1rem;
             color: #007bff;
         }
-    
         .activity-details .text-muted {
             font-size: 0.9rem;
         }
-    
         .btn-outline-danger {
             border-color: #dc3545;
             color: #dc3545;
         }
-    
         .btn-outline-danger:hover {
             background-color: #dc3545;
             color: #fff;
         }
-    
         .btn-outline-danger i {
             margin-right: 5px;
+        }
+
+        /* Mobile view adjustments */
+        @media (max-width: 576px) {
+            .current-time {
+                font-size: 1.5rem;
+                margin: 15px 0;
+            }
+            .form-control {
+                font-size: 0.9rem;
+            }
+            .btn-primary {
+                font-size: 0.9rem;
+                padding: 0.5rem 1rem;
+            }
+            .btn-outline-danger {
+                font-size: 0.9rem;
+                padding: 0.5rem 1rem;
+            }
+            .list-group-item {
+                font-size: 0.9rem;
+                padding: 8px 10px;
+            }
+            .activity-details strong {
+                font-size: 1rem;
+            }
+        }
+
+        /* Tablet view adjustments */
+        @media (min-width: 577px) and (max-width: 768px) {
+            .current-time {
+                font-size: 1.75rem;
+                margin: 20px 0;
+            }
+            .form-control {
+                font-size: 1rem;
+            }
+            .btn-primary {
+                font-size: 1rem;
+                padding: 0.6rem 1.2rem;
+            }
+            .btn-outline-danger {
+                font-size: 1rem;
+                padding: 0.6rem 1.2rem;
+            }
+            .list-group-item {
+                font-size: 1rem;
+                padding: 10px 15px;
+            }
+            .activity-details strong {
+                font-size: 1.1rem;
+            }
         }
     </style>
     <script>
@@ -239,7 +279,6 @@
                 {% if 'user_id' in session %}
                     <li class="nav-item">
                         <span class="navbar-text text-light">Welcome, {{ session['user_email'].split('@gmail.com')[0] }}</span>
-
                     </li>
                     <li class="nav-item">
                         <a class="nav-link" href="#" onclick="generateQrCode()">Mobile Login</a>
@@ -247,7 +286,6 @@
                     <li class="nav-item">
                         <a class="nav-link" href="{{ url_for('logout') }}">Logout</a>
                     </li>
-                    
                 {% else %}
                     <li class="nav-item">
                         <a class="nav-link" href="{{ url_for('login') }}">Login</a>
@@ -261,45 +299,42 @@
     </nav>
 
     <!-- Main content -->
-    <div class="containers my-5">
+    <div class="container my-5">
         <h1>Add Activities</h1>
         <p id="current-time" class="current-time">Current Time: Loading...</p>
         <div style="display: flex;">
-        <div>
-            <form method="post">
-                <div class="form-group">
-                    <label for="activity"><i class="fas fa-tasks"></i> Activity:</label>
-                    <input type="text" id="activity" name="activity" class="form-control" required>
-                </div>
-                <div class="form-group">
-                    <label for="time"><i class="fas fa-clock"></i> Time:</label>
-                    <input type="datetime-local" id="time" name="time" class="form-control" required>
-                </div>
-                <button type="submit" class="btn btn-primary">Add Activity</button>
-            </form>
-        </div>
-        <!-- <h2 class="my-4 text-center">----- Your Set Activities -----</h2> -->
-<div class="activities-container">
-    <ul class="list-group">
-        {% for activity in activities %}
-            <li class="list-group-item activity d-flex justify-content-between align-items-center" data-activity="{{ activity[1] }}" data-time="{{ activity[2] }}">
-                <div class="activity-details">
-                    
-                    <strong><i class="fas fa-tasks text-primary"></i>{{ activity[1] }}</strong>
-                    <div>
-                        <span class="text-muted">{{ activity[2] }}</span>
+            <div>
+                <form method="post">
+                    <div class="form-group">
+                        <label for="activity"><i class="fas fa-tasks"></i> Activity:</label>
+                        <input type="text" id="activity" name="activity" class="form-control" required>
                     </div>
-                </div>
-                <button class="btn btn-outline-danger btn-sm" onclick="deleteActivity('{{ activity[0] }}', this.parentElement)">
-                    <i class="fas fa-trash-alt"></i> Delete
-                </button>
-            </li>
-        {% endfor %}
-    </ul>
-</div>
+                    <div class="form-group">
+                        <label for="time"><i class="fas fa-clock"></i> Time:</label>
+                        <input type="datetime-local" id="time" name="time" class="form-control" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Add Activity</button>
+                </form>
+            </div>
+        </div>
+        <div class="activities-container">
+            <ul class="list-group">
+                {% for activity in activities %}
+                    <li class="list-group-item activity d-flex justify-content-between align-items-center" data-activity="{{ activity[1] }}" data-time="{{ activity[2] }}">
+                        <div class="activity-details">
+                            <strong><i class="fas fa-tasks text-primary"></i>{{ activity[1] }}</strong>
+                            <div>
+                                <span class="text-muted">{{ activity[2] }}</span>
+                            </div>
+                        </div>
+                        <button class="btn btn-outline-danger btn-sm" onclick="deleteActivity('{{ activity[0] }}', this.parentElement)">
+                            <i class="fas fa-trash-alt"></i> Delete
+                        </button>
+                    </li>
+                {% endfor %}
+            </ul>
+        </div>
 
-        
-    </div>
         <!-- QR Code Modal -->
         <div class="modal fade" id="qrModal" tabindex="-1" role="dialog" aria-labelledby="qrModalLabel" aria-hidden="true">
             <div class="modal-dialog modal-dialog-centered" role="document">
@@ -318,17 +353,15 @@
         </div>
     </div>
 
-    <div style="margin-top:100px;">
-        <footer class="footer" >
-            <p>&copy; 2024 Your Company. All Rights Reserved.</p>
-            <div class="social-media">
-                <a href="https://facebook.com" target="_blank" title="Facebook"><i class="fab fa-facebook-f"></i></a>
-                <a href="https://twitter.com" target="_blank" title="Twitter"><i class="fab fa-twitter"></i></a>
-                <a href="https://instagram.com" target="_blank" title="Instagram"><i class="fab fa-instagram"></i></a>
-                <a href="https://linkedin.com" target="_blank" title="LinkedIn"><i class="fab fa-linkedin-in"></i></a>
-            </div>
-        </footer>
-    </div>
+    <footer class="footer">
+        <p>&copy; 2024 Your Company. All Rights Reserved.</p>
+        <div class="social-media">
+            <a href="https://facebook.com" target="_blank" title="Facebook"><i class="fab fa-facebook-f"></i></a>
+            <a href="https://twitter.com" target="_blank" title="Twitter"><i class="fab fa-twitter"></i></a>
+            <a href="https://instagram.com" target="_blank" title="Instagram"><i class="fab fa-instagram"></i></a>
+            <a href="https://linkedin.com" target="_blank" title="LinkedIn"><i class="fab fa-linkedin-in"></i></a>
+        </div>
+    </footer>
 
     <!-- Bootstrap JS and dependencies -->
     <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
