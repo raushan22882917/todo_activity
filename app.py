@@ -12,10 +12,10 @@ bcrypt = Bcrypt(app)
 # Database connection
 def get_db_connection():
     conn = psycopg2.connect(
-        host="localhost",
-        database="tododb",
-        user="postgres",
-        password="22882288"
+        host="dpg-cqegi208fa8c73e6mgjg-a",
+        database="tododb_qzpy",
+        user="root",
+        password="lhjuw7w3KVTUxIYGWW7X8cKbLoAEi95u"
     )
     return conn
 
