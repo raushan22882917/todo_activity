@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Activities</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <style>
+        body {
+            padding-top: 56px; /* Adjust for fixed navbar */
+        }
+        .navbar-nav a {
+            color: #ffffff !important;
+        }
+        .current-time {
+            font-size: 2rem;
+            font-weight: bold;
+            text-align: center;
+            margin: 20px 0;
+        }
+        .activity {
+            margin: 10px 0;
+        }
+        .activity button {
+            margin-left: 10px;
+        }
+        .qr-container {
+            text-align: center;
+            margin: 20px 0;
+        }
+        .qr-container img {
+            max-width: 100%;
+            height: auto;
+        }
+    </style>
+    <script>
+        function requestNotificationPermission() {
+            if (Notification.permission !== 'granted') {
+                Notification.requestPermission();
+            }
+        }
+
+        function playAlarmSound() {
+            let alarm = new Audio('/static/alarm.mp3');
+            alarm.play();
+        }
+
+        function scheduleNotification(activity, time) {
+            let activityTime = new Date(time).getTime();
+            let now = new Date().getTime();
+
+            if (activityTime <= now) {
+                new Notification('Activity Reminder', {
+                    body: `Reminder for: ${activity} at ${new Date(activityTime).toLocaleTimeString()}`
+                });
+                playAlarmSound();
+                return;
+            }
+
+            let delay = activityTime - now;
+
+            setTimeout(() => {
+                new Notification('Activity Reminder', {
+                    body: `Reminder for: ${activity} at ${new Date(activityTime).toLocaleTimeString()}`
+                });
+                playAlarmSound();
+            }, delay);
+        }
+
+        function removePastActivities() {
+            let now = new Date().getTime();
+            document.querySelectorAll('.activity').forEach(item => {
+                let activityTime = new Date(item.dataset.time).getTime();
+                if (activityTime <= now) {
+                    setTimeout(() => {
+                        item.remove();
+                        fetch('/delete_past_activities', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                            }
+                        });
+                    }, 5 * 60 * 1000); // 5 minutes delay
+                }
+            });
+        }
+
+        function displayCurrentTime() {
+            let now = new Date();
+            document.getElementById('current-time').textContent = now.toLocaleTimeString();
+            setInterval(() => {
+                now = new Date();
+                document.getElementById('current-time').textContent = now.toLocaleTimeString();
+            }, 1000); // Update every second
+        }
+
+        function deleteActivity(activityId, element) {
+            fetch('/activity', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: new URLSearchParams({
+                    'delete': true,
+                    'activity_id': activityId
+                })
+            }).then(response => response.text()).then(() => {
+                element.remove();
+            });
+        }
+
+        function generateQrCode() {
+            fetch('/generate_qr')
+                .then(response => response.blob())
+                .then(blob => {
+                    const img = document.createElement('img');
+                    img.src = URL.createObjectURL(blob);
+                    const qrContainer = document.getElementById('qr-container');
+                    qrContainer.innerHTML = ''; // Clear previous QR code if any
+                    qrContainer.appendChild(img);
+                });
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            requestNotificationPermission();
+            displayCurrentTime();
+
+            document.querySelectorAll('.activity').forEach(item => {
+                let activity = item.dataset.activity;
+                let time = item.dataset.time;
+                scheduleNotification(activity, time);
+            });
+
+            removePastActivities();
+            generateQrCode(); // Generate QR code on page load
+        });
+    </script>
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary fixed-top">
+        <a class="navbar-brand" href="{{ url_for('index') }}">Home</a>
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav ml-auto">
+                {% if 'user_id' in session %}
+                    <li class="nav-item">
+                        <span class="navbar-text text-light">Welcome, {{ session['user_email'] }}</span>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('logout') }}">Logout</a>
+                    </li>
+                {% else %}
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('login') }}">Login</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('signup') }}">Sign Up</a>
+                    </li>
+                {% endif %}
+            </ul>
+        </div>
+    </nav>
+
+    <!-- Main content -->
+    <div class="container my-5">
+        <h1>Today's Activities</h1>
+        <p id="current-time" class="current-time">Current Time: Loading...</p>
+        <form method="post">
+            <div class="form-group">
+                <label for="activity"><i class="fas fa-tasks"></i> Activity:</label>
+                <input type="text" id="activity" name="activity" class="form-control" required>
+            </div>
+            <div class="form-group">
+                <label for="time"><i class="fas fa-clock"></i> Time:</label>
+                <input type="datetime-local" id="time" name="time" class="form-control" required>
+            </div>
+            <button type="submit" class="btn btn-primary">Add Activity</button>
+        </form>
+        <h2 class="my-4">Upcoming Activities:</h2>
+        <ul class="list-group">
+            {% for activity in activities %}
+                <li class="list-group-item activity" data-activity="{{ activity[1] }}" data-time="{{ activity[2] }}">
+                    <i class="fas fa-tasks"></i> {{ activity[1] }} at {{ activity[2] }}
+                    <button class="btn btn-danger btn-sm float-right" onclick="deleteActivity('{{ activity[0] }}', this.parentElement)">Delete</button>
+                </li>
+            {% endfor %}
+        </ul>
+
+        <!-- QR Code Button and Display -->
+        <div class="qr-container">
+            <button class="btn btn-info" onclick="generateQrCode()">Generate QR Code for Login</button>
+            <div id="qr-container"></div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS and dependencies -->
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+</body>
+</html>
